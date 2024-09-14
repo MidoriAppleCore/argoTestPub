@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: auto-sync-apps
+  namespace: default
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
+        revision: main
+        directories:
+          - path: argocd/  # This points to the directory in the Git repo containing your app manifests
+  template:
+    metadata:
+      name: '{{path.basename}}'  # Uses the folder name in the repo for the application name
+    spec:
+      project: default  # Argo CD project
+      source:
+        repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
+        targetRevision: main
+        path: '{{path}}'  # Dynamically sets the path to the application manifest in the specified folder
+      destination:
+        server: https://kubernetes.default.svc  # URL of the Kubernetes cluster
+        namespace: '{{path.basename}}'  # Optional: Uses the folder name as the namespace
+      syncPolicy:
+        automated:
+          prune: true  # Automatically prunes (deletes) resources that are removed from the Git repo
+          selfHeal: true  # Automatically syncs if there is drift between the desired and current state
