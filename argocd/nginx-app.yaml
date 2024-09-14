@@ -1,18 +1,19 @@
+---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: nginx-app  # Name of your Argo CD application
-  namespace: argocd  # This should be the namespace where Argo CD is installed
+  name: nginx-app
+  namespace: argocd
 spec:
-  project: default  # Argo CD project name
+  project: default
   source:
-    repoURL: 'https://github.com/MidoriAppleCore/argoTestPub.git'  # Your Git repository URL
-    targetRevision: main  # Use 'main' or your desired branch name
-    path: 'nginx/'  # Relative path in the Git repository where the deployment manifest is located
+    repoURL: 'https://github.com/MidoriAppleCore/argoTestPub.git'
+    targetRevision: main
+    path: 'nginx/'
   destination:
-    server: 'https://kubernetes.default.svc'  # URL of the Kubernetes cluster (default for in-cluster)
-    namespace: default  # Target namespace in the cluster where you want to deploy Nginx
+    server: 'https://kubernetes.default.svc'
+    namespace: default
   syncPolicy:
     automated:
-      prune: true  # Automatically delete resources that are removed from the Git repo
-      selfHeal: true  # Automatically sync if there is a drift between the desired and actual state
+      prune: true
+      selfHeal: true
