@@ -9,7 +9,7 @@ spec:
         repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
         revision: main
         directories:
-          - path: argocd/  # This points to the directory in the Git repo containing your app manifests
+          - path: argocd/  # Ensure this points to the correct directory containing your app manifests
   template:
     metadata:
       name: '{{path.basename}}-auto-app'  # Makes the application name unique and descriptive
@@ -18,10 +18,10 @@ spec:
       source:
         repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
         targetRevision: main
-        path: '{{path}}'  # Dynamically sets the path to the application manifest in the specified folder
+        path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.basename}}'  # Ensure namespaces are properly created or adjust to a fixed namespace
+        namespace: argocd  # All applications will be deployed in the 'argocd' namespace
       syncPolicy:
         automated:
           prune: true
