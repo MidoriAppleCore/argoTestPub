@@ -8,7 +8,7 @@ spec:
   source:
     repoURL: 'https://github.com/MidoriAppleCore/argoTestPub' # Replace with your Git repo URL
     targetRevision: HEAD
-    path: . # Path to the directory where nginx-deployment.yaml is located
+    path: ./nginx/
   destination:
     server: 'https://kubernetes.default.svc'
     namespace: default # Namespace where you want to deploy Nginx
