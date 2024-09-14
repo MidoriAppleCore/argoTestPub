@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/your-repo/nginx-config' # Replace with your Git repo URL
+    repoURL: 'https://github.com/MidoriAppleCore/argoTestPub' # Replace with your Git repo URL
     targetRevision: HEAD
     path: . # Path to the directory where nginx-deployment.yaml is located
   destination:
