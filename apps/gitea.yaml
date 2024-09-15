@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gitea
-  namespace: default
+  namespace: argocd
 spec:
   replicas: 1
   selector:
@@ -38,7 +38,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: gitea
-  namespace: default
+  namespace: argocd
 spec:
   ports:
     - port: 3000
@@ -57,7 +57,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: gitea-pvc
-  namespace: default
+  namespace: argocd
 spec:
   accessModes:
     - ReadWriteOnce
