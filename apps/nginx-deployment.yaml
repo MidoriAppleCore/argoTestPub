@@ -27,7 +27,7 @@ metadata:
 spec:
   type: ClusterIP
   selector:
-    app: nginx-app-test # Corrected label here!
+    app: nginx-app-test
   ports:
   - protocol: TCP
     port: 80
