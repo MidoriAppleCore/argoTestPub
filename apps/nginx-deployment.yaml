@@ -21,7 +21,7 @@ spec:
         - containerPort: 80
         volumeMounts:
         - mountPath: /usr/share/nginx/html
-          name: web-content
+          name: web-content  # Same volume name as in git-sync sidecar
       volumes:
       - name: web-content
         emptyDir: {}
