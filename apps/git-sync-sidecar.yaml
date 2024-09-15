@@ -30,10 +30,6 @@ spec:
         volumeMounts:
         - mountPath: /mnt/git
           name: web-content
-        securityContext:
-          runAsUser: 33    # UID for www-data
-          runAsGroup: 33   # GID for www-data
-          fsGroup: 33      # File system group for www-data
       volumes:
       - name: web-content
         emptyDir: {}
