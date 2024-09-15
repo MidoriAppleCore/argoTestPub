@@ -45,16 +45,3 @@ spec:
       - name: web-content
         persistentVolumeClaim:
           claimName: git-sync-pvc
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: git-sync-pvc
-  namespace: argocd  # Replace with your actual namespace
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
-  storageClassName: standard  # Replace with your actual StorageClass
