@@ -21,10 +21,11 @@ spec:
         - containerPort: 80
         volumeMounts:
         - mountPath: /usr/share/nginx/html
-          name: web-content  # Same volume name as in git-sync sidecar
+          name: web-content
       volumes:
       - name: web-content
-        emptyDir: {}
+        persistentVolumeClaim:
+          claimName: git-sync-pvc
 ---
 apiVersion: v1
 kind: Service
