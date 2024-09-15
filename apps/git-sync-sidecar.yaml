@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: git-sync-sidecar
-  namespace: argocd  # Replace with your actual namespace
+  namespace: argocd  # Replace with your namespace
 spec:
   replicas: 1
   selector:
@@ -20,24 +20,15 @@ spec:
         image: registry.k8s.io/git-sync/git-sync:v3.6.1
         env:
         - name: GIT_SYNC_REPO
-          value: "https://github.com/MidoriAppleCore/pubsitetest.git"  # Replace with your repo URL
+          value: "https://github.com/MidoriAppleCore/pubsitetest.git"
         - name: GIT_SYNC_BRANCH
-          value: "main"  # Replace with your target branch
+          value: "main"
         - name: GIT_SYNC_ROOT
-          value: "/mnt/git"  # Root directory for git-sync to operate
+          value: "/usr/share/nginx/html"  # Sync directly to the Nginx root
         - name: GIT_SYNC_DEST
-          value: ""  # Syncs the content directly to /mnt/git without additional subdirectory
+          value: "."  # Sync contents to the specified root
         - name: GIT_SYNC_WAIT
-          value: "30"  # Time in seconds between syncs
-        - name: GIT_SYNC_ONE_TIME
-          value: "false"  # Continuous sync mode
-        volumeMounts:
-        - mountPath: /mnt/git
-          name: web-content
-      - name: nginx
-        image: nginx:latest
-        ports:
-        - containerPort: 80
+          value: "30"
         volumeMounts:
         - mountPath: /usr/share/nginx/html
           name: web-content
