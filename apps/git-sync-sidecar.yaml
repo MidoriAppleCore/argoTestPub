@@ -24,15 +24,38 @@ spec:
         - name: GIT_SYNC_BRANCH
           value: "main"
         - name: GIT_SYNC_ROOT
-          value: "/usr/share/nginx/html" # Sync directly to the Nginx root
+          value: "/tmp/git-sync" # Temporary directory for git-sync
         - name: GIT_SYNC_DEST
-          value: "" # Sync contents directly to the root, without creating a subdirectory
+          value: "repo" # Sync to a subdirectory called "repo"
         - name: GIT_SYNC_WAIT
           value: "30"
         volumeMounts:
+        - mountPath: /tmp/git-sync
+          name: git-sync-volume
+      - name: content-mover
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          while true; do
+            if [ -d "/tmp/git-sync/repo" ] && [ "$(ls -A /tmp/git-sync/repo)" ]; then
+              rm -rf /usr/share/nginx/html/*
+              cp -R /tmp/git-sync/repo/* /usr/share/nginx/html/
+              echo "Content copied to Nginx directory"
+              sleep 60
+            else
+              echo "Waiting for git-sync to complete..."
+              sleep 5
+            fi
+          done
+        volumeMounts:
+        - mountPath: /tmp/git-sync
+          name: git-sync-volume
         - mountPath: /usr/share/nginx/html
           name: web-content
       volumes:
+      - name: git-sync-volume
+        emptyDir: {}
       - name: web-content
         persistentVolumeClaim:
           claimName: git-sync-pvc
