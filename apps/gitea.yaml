@@ -11,7 +11,7 @@ spec:
     chart: gitea
   destination:
     server: https://kubernetes.default.svc
-    namespace: argo-cd # Replace with the desired namespace
+    namespace: argocd # Replace with the desired namespace
   syncPolicy:
     automated:
       prune: true
