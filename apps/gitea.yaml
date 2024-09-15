@@ -1,3 +1,4 @@
+# MySQL Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,29 +17,27 @@ spec:
       containers:
         - name: mysql
           image: mysql:8.0
-          ports:
-            - containerPort: 3306
           env:
             - name: MYSQL_ROOT_PASSWORD
-              value: "gitea_root_password" # Change this to a secure password
+              value: "gitea_root_password" # Secure password
             - name: MYSQL_DATABASE
-              value: "gitea"  # Gitea database name
+              value: "gitea"
             - name: MYSQL_USER
               value: "gitea"
             - name: MYSQL_PASSWORD
-              value: "gitea_password" # Change this to a secure password
+              value: "gitea_password" # Secure password
           volumeMounts:
             - name: mysql-data
               mountPath: /var/lib/mysql
       volumes:
         - name: mysql-data
           persistentVolumeClaim:
-            claimName: mysql-pvc
+            claimName: mysql-data-pvc
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mysql-pvc
+  name: mysql-data-pvc
   namespace: argocd
 spec:
   accessModes:
@@ -61,13 +60,111 @@ spec:
     app: mysql
   type: ClusterIP
 ---
+# Redis Deployment for Session, Cache, and Queue Management
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:alpine
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: argocd
+spec:
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    app: redis
+  type: ClusterIP
+---
+# MinIO Deployment for Object Storage
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minio
+  namespace: argocd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio
+          args:
+            - server
+            - /data
+          env:
+            - name: MINIO_ACCESS_KEY
+              value: "minioadmin" # Set your access key
+            - name: MINIO_SECRET_KEY
+              value: "minioadmin" # Set your secret key
+          volumeMounts:
+            - name: minio-data
+              mountPath: /data
+      volumes:
+        - name: minio-data
+          persistentVolumeClaim:
+            claimName: minio-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: minio-data-pvc
+  namespace: argocd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: argocd
+spec:
+  ports:
+    - port: 9000
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    app: minio
+  type: ClusterIP
+---
+# Gitea Deployment
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gitea
   namespace: argocd
 spec:
-  replicas: 1
+  replicas: 3 # Deploy 3 replicas for high availability
   selector:
     matchLabels:
       app: gitea
@@ -98,15 +195,48 @@ spec:
             - name: DB_USER
               value: "gitea"
             - name: DB_PASSWD
-              value: "gitea_password" # Match this with the MySQL deployment password
+              value: "gitea_password"
+            - name: SESSION_PROVIDER
+              value: "redis"
+            - name: SESSION_PROVIDER_CONFIG
+              value: "network=tcp,addr=redis:6379,password=,pool_size=100,idle_timeout=180"
+            - name: CACHE_ADAPTER
+              value: "redis"
+            - name: CACHE_CONNECTION
+              value: "addr=redis:6379,pool_size=100,idle_timeout=180"
+            - name: QUEUE_TYPE
+              value: "redis"
+            - name: QUEUE_CONN_STR
+              value: "redis://:password@redis:6379/0"
+            - name: STORAGE_TYPE
+              value: "minio"
+            - name: STORAGE_MINIO_ENDPOINT
+              value: "minio:9000"
+            - name: STORAGE_MINIO_ACCESS_KEY
+              value: "minioadmin" # Use the same key from MinIO
+            - name: STORAGE_MINIO_SECRET_KEY
+              value: "minioadmin" # Use the same secret key from MinIO
           volumeMounts:
             - name: gitea-data
               mountPath: /data
       volumes:
         - name: gitea-data
           persistentVolumeClaim:
-            claimName: gitea-pvc
+            claimName: gitea-data-pvc
 ---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-data-pvc
+  namespace: argocd
+spec:
+  accessModes:
+    - ReadWriteMany # Allow multiple replicas to read/write to the same volume
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Gitea Service
 apiVersion: v1
 kind: Service
 metadata:
@@ -127,15 +257,3 @@ spec:
   selector:
     app: gitea
   type: NodePort
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: gitea-pvc
-  namespace: argocd
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
