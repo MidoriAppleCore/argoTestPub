@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: git-sync-sidecar
+  namespace: argocd  # Replace with your namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: git-sync
+  template:
+    metadata:
+      labels:
+        app: git-sync
+    spec:
+      containers:
+      - name: git-sync
+        image: k8s.gcr.io/git-sync:v3.2.2
+        env:
+        - name: GIT_SYNC_REPO
+          value: "https://github.com/MidoriAppleCore/pubsitetest.git"  # Replace with your repository URL
+        - name: GIT_SYNC_BRANCH
+          value: "main"  # Replace with the desired branch
+        - name: GIT_SYNC_ROOT
+          value: "/mnt/git"
+        - name: GIT_SYNC_DEST
+          value: "web-content"
+        - name: GIT_SYNC_WAIT
+          value: "30"  # Sync every 30 seconds
+        volumeMounts:
+        - mountPath: /mnt/git
+          name: web-content
+      volumes:
+      - name: web-content
+        emptyDir: {}
