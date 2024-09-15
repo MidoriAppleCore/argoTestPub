@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitea
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://dl.gitea.com/charts/ # URL of the Helm chart repository
+    targetRevision: v9.6.0 # Specify the version you want to use
+    chart: gitea
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitea-namespace # Replace with the desired namespace
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+  helm:
+    releaseName: gitea
+    valueFiles:
+      - values.yaml # Optional: Provide your own values file
+    values: | # Optional: Inline values overrides
+      gitea:
+        adminUser: "admin"
+        adminPassword: "yourpassword"
+        adminEmail: "admin@example.com"
