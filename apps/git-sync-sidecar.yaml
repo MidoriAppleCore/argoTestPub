@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: git-sync-sidecar
-  namespace: argocd  # Replace with your namespace
+  namespace: argocd # Replace with your namespace
 spec:
   replicas: 1
   selector:
@@ -14,7 +14,7 @@ spec:
         app: git-sync
     spec:
       securityContext:
-        fsGroup: 33  # Group ID for www-data (Nginx user)
+        fsGroup: 33 # Group ID for www-data (Nginx user)
       containers:
       - name: git-sync
         image: registry.k8s.io/git-sync/git-sync:v3.6.1
@@ -24,9 +24,9 @@ spec:
         - name: GIT_SYNC_BRANCH
           value: "main"
         - name: GIT_SYNC_ROOT
-          value: "/usr/share/nginx/html"  # Sync directly to the Nginx root
+          value: "/usr/share/nginx/html" # Sync directly to the Nginx root
         - name: GIT_SYNC_DEST
-          value: "."  # Sync contents to the specified root
+          value: "" # Sync contents directly to the root, without creating a subdirectory
         - name: GIT_SYNC_WAIT
           value: "30"
         volumeMounts:
