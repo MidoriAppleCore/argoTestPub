@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: git-sync-sidecar
-  namespace: argocd  # Replace with your namespace
+  namespace: argocd  # Replace with your actual namespace
 spec:
   replicas: 1
   selector:
@@ -20,19 +20,55 @@ spec:
         image: registry.k8s.io/git-sync/git-sync:v3.6.1
         env:
         - name: GIT_SYNC_REPO
-          value: "https://github.com/MidoriAppleCore/pubsitetest.git"
+          value: "https://github.com/MidoriAppleCore/pubsitetest.git"  # Replace with your repo URL
         - name: GIT_SYNC_BRANCH
-          value: "main"
+          value: "main"  # Replace with your target branch
         - name: GIT_SYNC_ROOT
-          value: "/mnt/git"
+          value: "/mnt/git"  # Root directory for git-sync to operate
         - name: GIT_SYNC_DEST
-          value: "."
+          value: ""  # Syncs the content directly to /mnt/git without additional subdirectory
         - name: GIT_SYNC_WAIT
-          value: "30"
+          value: "30"  # Time in seconds between syncs
+        - name: GIT_SYNC_ONE_TIME
+          value: "false"  # Continuous sync mode
         volumeMounts:
         - mountPath: /mnt/git
+          name: web-content
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /usr/share/nginx/html
           name: web-content
       volumes:
       - name: web-content
         persistentVolumeClaim:
           claimName: git-sync-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: git-sync-pvc
+  namespace: argocd  # Replace with your actual namespace
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard  # Replace with your actual StorageClass
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+  namespace: argocd  # Replace with your actual namespace
+spec:
+  selector:
+    app: git-sync
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  type: ClusterIP
