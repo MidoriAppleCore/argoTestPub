@@ -11,15 +11,13 @@ spec:
     chart: gitea
   destination:
     server: https://kubernetes.default.svc
-    namespace: gitea-namespace # Replace with the desired namespace
+    namespace: argo-cd # Replace with the desired namespace
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
   helm:
     releaseName: gitea
-    valueFiles:
-      - values.yaml # Optional: Provide your own values file
     values: | # Optional: Inline values overrides
       gitea:
         adminUser: "admin"
