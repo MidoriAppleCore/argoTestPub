@@ -58,17 +58,3 @@ spec:
     requests:
       storage: 1Gi
   storageClassName: standard  # Replace with your actual StorageClass
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-service
-  namespace: argocd  # Replace with your actual namespace
-spec:
-  selector:
-    app: git-sync
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
-  type: ClusterIP
