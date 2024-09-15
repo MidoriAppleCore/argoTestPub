@@ -9,7 +9,7 @@ spec:
         repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
         revision: main
         directories:
-          - path: argocd/  # Ensure this directory contains your Application manifests
+          - path: apps/  # Ensure this directory contains your Application manifests
   template:
     metadata:
       name: '{{path.basename}}-auto-app'
