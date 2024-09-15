@@ -2,26 +2,26 @@ apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: auto-sync-apps
-  namespace: argocd  # Changed to match where Argo CD is deployed
+  namespace: argocd
 spec:
   generators:
     - git:
         repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
         revision: main
         directories:
-          - path: argocd/  # This points to the correct directory containing your app manifests
+          - path: argocd/  # Ensure this directory contains your Application manifests
   template:
     metadata:
-      name: '{{path.basename}}-{{name}}-auto-app'  # Adds unique naming based on directory and name
+      name: '{{path.basename}}-auto-app'
     spec:
       project: default
       source:
         repoURL: https://github.com/MidoriAppleCore/argoTestPub.git
         targetRevision: main
-        path: '{{path}}'  # Dynamically points to the directory path
+        path: '{{path}}'
       destination:
-        server: https://kubernetes.default.svc
-        namespace: argocd  # Ensures applications are deployed in the 'argocd' namespace
+        server: 'https://kubernetes.default.svc'
+        namespace: default
       syncPolicy:
         automated:
           prune: true
