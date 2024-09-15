@@ -13,20 +13,22 @@ spec:
       labels:
         app: git-sync
     spec:
+      securityContext:
+        fsGroup: 33  # Group ID for www-data (Nginx user)
       containers:
       - name: git-sync
         image: registry.k8s.io/git-sync/git-sync:v3.6.1
         env:
         - name: GIT_SYNC_REPO
-          value: "https://github.com/MidoriAppleCore/pubsitetest.git"  # Your repository URL
+          value: "https://github.com/MidoriAppleCore/pubsitetest.git"
         - name: GIT_SYNC_BRANCH
-          value: "main"  # Your desired branch
+          value: "main"
         - name: GIT_SYNC_ROOT
           value: "/mnt/git"
         - name: GIT_SYNC_DEST
-          value: "."  # Sync to the root directory
+          value: "."
         - name: GIT_SYNC_WAIT
-          value: "30"  # Sync every 30 seconds
+          value: "30"
         volumeMounts:
         - mountPath: /mnt/git
           name: web-content
