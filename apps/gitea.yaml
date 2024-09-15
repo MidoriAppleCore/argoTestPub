@@ -185,7 +185,7 @@ metadata:
   name: gitea
   namespace: argocd
 spec:
-  replicas: 1 # Deploy 3 replicas for high availability
+  replicas: 0 # Deploy 3 replicas for high availability
   selector:
     matchLabels:
       app: gitea
