@@ -20,7 +20,7 @@ spec:
         app: assetto-server
     spec:
       securityContext:
-        fsGroup: 33 # Group ID for www-data (Nginx user)
+        fsGroup: 33 # Adjust according to your needs
       containers:
       - name: git-sync
         image: registry.k8s.io/git-sync/git-sync:v3.6.1
@@ -37,9 +37,9 @@ spec:
         - name: GIT_SYNC_BRANCH
           value: "main"
         - name: GIT_SYNC_ROOT
-          value: "/tmp/git-sync" # Temporary directory for git-sync
+          value: "/tmp/git-sync"
         - name: GIT_SYNC_DEST
-          value: "repo" # Sync to a subdirectory called "repo"
+          value: "repo"
         - name: GIT_SYNC_WAIT
           value: "30"
         volumeMounts:
@@ -59,9 +59,9 @@ spec:
         - |
           while true; do
             if [ -d "/tmp/git-sync/repo" ] && [ "$(ls -A /tmp/git-sync/repo)" ]; then
-              rm -rf /data/*
-              cp -R /tmp/git-sync/repo/* /data/
-              echo "Content copied to game server data directory"
+              rm -rf /server/*
+              cp -R /tmp/git-sync/repo/* /server/
+              echo "Content copied to game server directory"
               sleep 60
             else
               echo "Waiting for git-sync to complete..."
@@ -71,10 +71,10 @@ spec:
         volumeMounts:
         - mountPath: /tmp/git-sync
           name: git-sync-volume
-        - mountPath: /data
+        - mountPath: /server
           name: game-data
       - name: assetto-server
-        image: seejy/assetto-server-manager:latest
+        image: compujuckel/assettoserver:latest
         resources:
           requests:
             memory: "512Mi"
@@ -83,11 +83,10 @@ spec:
             memory: "1Gi"
             cpu: "1"
         ports:
-        - containerPort: 8772 # Assetto Server Manager Web UI
-        - containerPort: 9600 # Assetto Server Game Port
-        - containerPort: 8080 # Assetto Server HTTP Port
+        - containerPort: 9600 # Assetto Corsa game server port
+        - containerPort: 8081 # Additional ports if required
         volumeMounts:
-        - mountPath: /data
+        - mountPath: /server
           name: game-data
       volumes:
       - name: git-sync-volume
@@ -131,15 +130,11 @@ spec:
   selector:
     app: assetto-server
   ports:
-  - name: web-ui-port
-    protocol: TCP
-    port: 8772
-    targetPort: 8772
   - name: game-port
     protocol: TCP
     port: 9600
     targetPort: 9600
-  - name: http-port
+  - name: additional-port
     protocol: TCP
-    port: 8080
-    targetPort: 8080
+    port: 8081
+    targetPort: 8081
