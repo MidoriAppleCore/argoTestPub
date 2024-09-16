@@ -1,0 +1,142 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: game-servers
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assetto-server-manager
+  namespace: game-servers
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: assetto-server
+  template:
+    metadata:
+      labels:
+        app: assetto-server
+    spec:
+      securityContext:
+        fsGroup: 33 # Group ID for www-data (Nginx user)
+      containers:
+      - name: git-sync
+        image: registry.k8s.io/git-sync/git-sync:v3.6.1
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "100m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+        env:
+        - name: GIT_SYNC_REPO
+          value: "https://github.com/MidoriAppleCore/pubsitetest.git"
+        - name: GIT_SYNC_BRANCH
+          value: "main"
+        - name: GIT_SYNC_ROOT
+          value: "/tmp/git-sync" # Temporary directory for git-sync
+        - name: GIT_SYNC_DEST
+          value: "repo" # Sync to a subdirectory called "repo"
+        - name: GIT_SYNC_WAIT
+          value: "30"
+        volumeMounts:
+        - mountPath: /tmp/git-sync
+          name: git-sync-volume
+      - name: content-mover
+        image: busybox
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          while true; do
+            if [ -d "/tmp/git-sync/repo" ] && [ "$(ls -A /tmp/git-sync/repo)" ]; then
+              rm -rf /data/*
+              cp -R /tmp/git-sync/repo/* /data/
+              echo "Content copied to game server data directory"
+              sleep 60
+            else
+              echo "Waiting for git-sync to complete..."
+              sleep 5
+            fi
+          done
+        volumeMounts:
+        - mountPath: /tmp/git-sync
+          name: git-sync-volume
+        - mountPath: /data
+          name: game-data
+      - name: assetto-server
+        image: seejy/assetto-server-manager:latest
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        ports:
+        - containerPort: 8772 # Assetto Server Manager Web UI
+        - containerPort: 9600 # Assetto Server Game Port
+        - containerPort: 8080 # Assetto Server HTTP Port
+        volumeMounts:
+        - mountPath: /data
+          name: game-data
+      volumes:
+      - name: git-sync-volume
+        emptyDir: {}
+      - name: game-data
+        persistentVolumeClaim:
+          claimName: game-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: game-data-pv
+spec:
+  capacity:
+    storage: 1Gi  # Adjust size as needed
+  accessModes:
+    - ReadWriteMany  # Allows multiple pods to read and write
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/game-data  # Change to an appropriate path on the host
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: game-data-pvc
+  namespace: game-servers
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi  # Match with PV size
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assetto-server-service
+  namespace: game-servers
+spec:
+  type: ClusterIP
+  selector:
+    app: assetto-server
+  ports:
+  - protocol: TCP
+    port: 8772
+    targetPort: 8772
+  - protocol: TCP
+    port: 9600
+    targetPort: 9600
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
