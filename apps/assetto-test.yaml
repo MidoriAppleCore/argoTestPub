@@ -131,12 +131,15 @@ spec:
   selector:
     app: assetto-server
   ports:
-  - protocol: TCP
+  - name: web-ui-port
+    protocol: TCP
     port: 8772
     targetPort: 8772
-  - protocol: TCP
+  - name: game-port
+    protocol: TCP
     port: 9600
     targetPort: 9600
-  - protocol: TCP
+  - name: http-port
+    protocol: TCP
     port: 8080
     targetPort: 8080
