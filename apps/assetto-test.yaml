@@ -7,17 +7,17 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: assetto-server-manager
+  name: assetto-game-server
   namespace: game-servers
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: assetto-server
+      app: assetto-game-server
   template:
     metadata:
       labels:
-        app: assetto-server
+        app: assetto-game-server
     spec:
       securityContext:
         fsGroup: 33 # Adjust according to your needs
@@ -73,7 +73,7 @@ spec:
           name: git-sync-volume
         - mountPath: /server
           name: game-data
-      - name: assetto-server
+      - name: assetto-game-server
         image: compujuckel/assettoserver:latest
         resources:
           requests:
@@ -123,12 +123,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: assetto-server-service
+  name: assetto-game-server-service
   namespace: game-servers
 spec:
   type: ClusterIP
   selector:
-    app: assetto-server
+    app: assetto-game-server
   ports:
   - name: game-port
     protocol: TCP
